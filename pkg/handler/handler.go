@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"WB/interal"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -13,6 +14,8 @@ func Route() error {
 	http.HandleFunc("/login", loginHandle)
 	http.HandleFunc("/register", registerHandle)
 	http.HandleFunc("/tasks", tasksHandler)
+	http.HandleFunc("/me", meHandle)
+	http.HandleFunc("/start", startHandle)
 
 	log.Println("listen port: 8080")
 	err := http.ListenAndServe(":8080", nil)
@@ -22,9 +25,21 @@ func Route() error {
 	return nil
 }
 
+func meHandle(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func startHandle(w http.ResponseWriter, r *http.Request) {
+
+}
+
 func loginHandle(w http.ResponseWriter, r *http.Request) {
-	role := r.FormValue("role")
-	fmt.Println(role)
+	var model interal.Model
+	model.Login = r.FormValue("login")
+	model.Role = r.FormValue("role")
+	fmt.Println(model.Role)
+	token := interal.GenerateToken(model.Login, model.Role)
+	w.Header().Set("Authorization", "Bearer "+token)
 	// ищем пользователя в бд и отправляем токен
 	http.Error(w, "пользователь или пароль не верен", http.StatusUnauthorized)
 }
@@ -35,6 +50,13 @@ func registerHandle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "пользователь уже существует", http.StatusConflict)
 		return
 	}
+	var model interal.Model
+	model.Login = r.FormValue("login")
+	model.Role = r.FormValue("role")
+	fmt.Println(model.Role)
+	token := interal.GenerateToken(model.Login, model.Role)
+	w.Header().Set("Authorization", "Bearer "+token)
+
 	w.WriteHeader(http.StatusCreated)
 }
 
