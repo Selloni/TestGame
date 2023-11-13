@@ -24,7 +24,7 @@ func NewClient(ctx context.Context) (*pgx.Conn, error) {
 	if err != nil {
 		fmt.Errorf("Ошибка при подключении к базе данных:%v", err)
 	}
-	defer conn.Close(context.Background())
+	//defer conn.Close(context.Background())
 
 	return conn, nil
 }
