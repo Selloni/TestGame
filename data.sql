@@ -10,6 +10,9 @@ create table customer
     money int
 );
 
+ALTER TABLE customer
+    ADD CONSTRAINT customer_constraint UNIQUE (login);
+
 create table task
 (
     id serial primary key,
@@ -17,6 +20,7 @@ create table task
     weight varchar(100) not null,
     done boolean default false
 );
+
 
 create table loader
 (
@@ -29,5 +33,8 @@ create table loader
     task_id int ,
     CONSTRAINT task_fk FOREIGN KEY (task_id) REFERENCES task (id)
 );
+
+ALTER TABLE loader
+    ADD CONSTRAINT loader_constraint UNIQUE (login);
 
 -- http://localhost:8080/register?login=hh&role=customer&password=123

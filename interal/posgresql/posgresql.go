@@ -21,9 +21,9 @@ func Check(ctx context.Context, conn *pgxpool.Pool, user interal.Model) (bool, e
 	var count int
 	q := fmt.Sprintf(`
 			select id from %s
-			where login = ($1)
+			where login = ($1) and password = ($2)
 			`, user.Role)
-	if err := conn.QueryRow(ctx, q, user.Login).Scan(&count); err != nil {
+	if err := conn.QueryRow(ctx, q, user.Login, user.Password).Scan(&count); err != nil {
 		if err == pgx.ErrNoRows {
 			return false, nil
 		}

@@ -4,6 +4,7 @@ import (
 	"WB/interal"
 	"context"
 	"fmt"
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -25,8 +26,11 @@ func CreateUser(ctx context.Context, conn *pgxpool.Pool, user interal.Model) err
 		    ($1,$2,$3)
 -- 		returning id
 		`
-	err := conn.QueryRow(ctx, q, user.Login, user.Password, user.Customer.Money)
+	err := conn.QueryRow(ctx, q, user.Login, user.Password, user.Customer.Money).Scan()
 	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil
+		}
 		return fmt.Errorf("не удалось создать заказчика")
 	}
 	return nil

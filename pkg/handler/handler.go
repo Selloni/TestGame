@@ -9,7 +9,6 @@ import (
 	"WB/interal/posgresql"
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
 	"net/http"
@@ -56,42 +55,42 @@ func (h *handler) startHandle(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) loginHandle(w http.ResponseWriter, r *http.Request) {
-
-	h.user.Login = r.FormValue("login")
-	h.user.Role = r.FormValue("role")
-	fmt.Println(h.user.Role)
+	err, exists := h.existsUser(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if !exists {
+		http.Error(w, "пользователь не найден или неверный пароль", http.StatusUnauthorized)
+		return
+	}
+	w.Write([]byte("Привет"))
 	token := interal.GenerateToken(h.user.Login, h.user.Role)
 	w.Header().Set("Authorization", "Bearer "+token)
 	// ищем пользователя в бд и отправляем токен
-	http.Error(w, "пользователь или пароль не верен", http.StatusUnauthorized)
 }
 
 func (h *handler) registerHandle(w http.ResponseWriter, r *http.Request) {
-	// поиск по логину, если нет добавляем в бд
-
 	h.user.Login = r.FormValue("login")
 	h.user.Role = r.FormValue("role")
 	h.user.Password = r.FormValue("password")
 
-	check, err := posgresql.Check(h.ctx, h.sql, h.user)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Println(err)
-		return
-	}
-	if check {
-		http.Error(w, "пользователь уже существует", http.StatusConflict)
-		return
-	}
 	if h.user.Role == "customer" {
-		fmt.Println(customer.GenerateCustomer())
 		h.user.Customer = customer.GenerateCustomer()
-		dbCustomer.CreateUser(h.ctx, h.sql, h.user)
+		if err := dbCustomer.CreateUser(h.ctx, h.sql, h.user); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Write([]byte("customer(заказчик) успешно создан"))
+
 	} else if h.user.Role == "loader" {
-		fmt.Println(loader.GenerateLoader())
 		h.user.Loader = loader.GenerateLoader()
-		dbLoader.CreateUser(h.ctx, h.sql, h.user)
+		if err := dbLoader.CreateUser(h.ctx, h.sql, h.user); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Write([]byte("loader(грузчик) успешно создан"))
+
 	} else {
 		http.Error(w, "достпуные роли  customer & loader", http.StatusBadRequest)
 		return
@@ -105,7 +104,7 @@ func (h *handler) registerHandle(w http.ResponseWriter, r *http.Request) {
 
 func (h *handler) tasksHandler(w http.ResponseWriter, r *http.Request) {
 	// бд для задач куда будем сохранять
-	task := h.GenerateTask()
+	task := h.generateTask()
 	data, err := json.Marshal(task)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -116,7 +115,7 @@ func (h *handler) tasksHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-func (h *handler) GenerateTask() map[string]int {
+func (h *handler) generateTask() map[string]int {
 	// либо на месте случайно гененрировать товары
 	// либо доставать случайное из бд уже сгенерированные
 	var mm = map[string]int{
@@ -126,4 +125,19 @@ func (h *handler) GenerateTask() map[string]int {
 		"spoon":  2,
 	}
 	return mm
+}
+
+func (h *handler) existsUser(r *http.Request) (error, bool) {
+	//todo: проверить на заполнение трех полей
+	h.user.Login = r.FormValue("login")
+	h.user.Role = r.FormValue("role")
+	h.user.Password = r.FormValue("password")
+
+	check, err := posgresql.Check(h.ctx, h.sql, h.user)
+
+	if err != nil {
+		return err, false
+	}
+
+	return nil, check
 }

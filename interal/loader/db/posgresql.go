@@ -4,12 +4,11 @@ import (
 	"WB/interal"
 	"context"
 	"fmt"
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"log"
 )
 
 func CreateUser(ctx context.Context, conn *pgxpool.Pool, user interal.Model) error {
-	log.Printf("dddd")
 	q := `
 		insert into loader
 			(login, password, weight, money, drunk)
@@ -17,8 +16,11 @@ func CreateUser(ctx context.Context, conn *pgxpool.Pool, user interal.Model) err
 		    ($1,$2,$3,$4,$5)
 -- 		returning id
 		`
-	err := conn.QueryRow(ctx, q, user.Login, user.Password, user.Loader.Weight, user.Loader.Salary, user.Loader.Drunk)
+	err := conn.QueryRow(ctx, q, user.Login, user.Password, user.Loader.Weight, user.Loader.Salary, user.Loader.Drunk).Scan()
 	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil
+		}
 		return fmt.Errorf("не удалось создать грузчика")
 	}
 	return nil
