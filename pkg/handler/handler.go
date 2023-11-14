@@ -64,6 +64,12 @@ func (h *handler) meHandle(w http.ResponseWriter, r *http.Request) {
 	if role == "customer" {
 		fmt.Println(h.user.Customer)
 	} else if role == "loader" {
+		h.user.Loader = &loader.Loader{
+			Weight: 12,
+			Salary: 2,
+			Drunk:  false,
+			Tired:  0,
+		}
 		fmt.Println(h.user)
 	}
 }
