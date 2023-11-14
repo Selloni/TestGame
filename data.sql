@@ -27,3 +27,5 @@ create table loader
     money int,
     Drunk  boolean
 );
+
+-- http://localhost:8080/register?login=hh&role=customer&password=123

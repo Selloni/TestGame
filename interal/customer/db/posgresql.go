@@ -23,12 +23,14 @@ func CreateUser(ctx context.Context, conn *pgx.Conn, user interal.Model) error {
 			(login, password, money)
 		values 
 		    ($1,$2,$3)
-		returning id
+-- 		returning id
 		`
+
 	err := conn.QueryRow(ctx, q, user.Login, user.Password, user.Customer.Money)
 	if err != nil {
 		return fmt.Errorf("не удалось создать заказчика")
 	}
+	fmt.Println(q)
 	return nil
 }
 

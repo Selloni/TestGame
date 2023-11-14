@@ -2,7 +2,9 @@ package handler
 
 import (
 	"WB/interal"
+	"WB/interal/customer"
 	"WB/interal/customer/db"
+	"WB/interal/loader"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -53,11 +55,10 @@ func (h *handler) startHandle(w http.ResponseWriter, r *http.Request) {
 
 func (h *handler) loginHandle(w http.ResponseWriter, r *http.Request) {
 
-	var model interal.Model
-	model.Login = r.FormValue("login")
-	model.Role = r.FormValue("role")
-	fmt.Println(model.Role)
-	token := interal.GenerateToken(model.Login, model.Role)
+	h.user.Login = r.FormValue("login")
+	h.user.Role = r.FormValue("role")
+	fmt.Println(h.user.Role)
+	token := interal.GenerateToken(h.user.Login, h.user.Role)
 	w.Header().Set("Authorization", "Bearer "+token)
 	// ищем пользователя в бд и отправляем токен
 	http.Error(w, "пользователь или пароль не верен", http.StatusUnauthorized)
@@ -65,14 +66,13 @@ func (h *handler) loginHandle(w http.ResponseWriter, r *http.Request) {
 
 func (h *handler) registerHandle(w http.ResponseWriter, r *http.Request) {
 	// поиск по логину, если нет добавляем в бд
-	var model interal.Model
-	//todo: валидировать роли
+
 	h.user.Login = r.FormValue("login")
 	h.user.Role = r.FormValue("role")
 	h.user.Password = r.FormValue("password")
-	fmt.Println(model.Role)
 
 	check, err := db.Check(h.ctx, h.sql, h.user)
+	//defer h.sql.Close(h.ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Println(err)
@@ -83,16 +83,30 @@ func (h *handler) registerHandle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//db.CreateUser(h.ctx, h.sql, h.user)
+	if h.user.Role == "customer" {
 
-	token := interal.GenerateToken(model.Login, model.Role)
+		fmt.Println(customer.GenerateCustomer())
+		h.user.Customer = customer.GenerateCustomer()
+		db.CreateUser(h.ctx, h.sql, h.user)
+
+	} else if h.user.Role == "loader" {
+
+		fmt.Println(loader.GenerateLoader())
+
+	} else {
+		http.Error(w, "достпуные роли  customer & loader", http.StatusBadRequest)
+		return
+	}
+
+	token := interal.GenerateToken(h.user.Login, h.user.Role)
 	w.Header().Set("Authorization", "Bearer "+token)
 	w.WriteHeader(http.StatusCreated)
+
 }
 
 func (h *handler) tasksHandler(w http.ResponseWriter, r *http.Request) {
 	// бд для задач куда будем сохранять
-	task := GenerateTask()
+	task := h.GenerateTask()
 	data, err := json.Marshal(task)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -103,8 +117,14 @@ func (h *handler) tasksHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-func GenerateTask() (result map[string]int) {
+func (h *handler) GenerateTask() map[string]int {
 	// либо на месте случайно гененрировать товары
 	// либо доставать случайное из бд уже сгенерированные
-	return
+	var mm = map[string]int{
+		"bead":   18,
+		"fridge": 21,
+		"TV":     12,
+		"spoon":  2,
+	}
+	return mm
 }
