@@ -5,29 +5,21 @@ import (
 	"context"
 	"fmt"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"log"
 )
 
-//type repository struct {
-//	sql *pgx.Conn
-//}
-//
-//func NewRepository(conn *pgx.Conn) *repository {
-//	return &repository{
-//		sql: conn,
-//	}
-//}
-
 func CreateUser(ctx context.Context, conn *pgxpool.Pool, user interal.Model) error {
+	log.Printf("dddd")
 	q := `
-		insert into customer
-			(login, password, money)
+		insert into loader
+			(login, password, weight, money, drunk)
 		values 
-		    ($1,$2,$3)
+		    ($1,$2,$3,$4,$5)
 -- 		returning id
 		`
-	err := conn.QueryRow(ctx, q, user.Login, user.Password, user.Customer.Money)
+	err := conn.QueryRow(ctx, q, user.Login, user.Password, user.Loader.Weight, user.Loader.Salary, user.Loader.Drunk)
 	if err != nil {
-		return fmt.Errorf("не удалось создать заказчика")
+		return fmt.Errorf("не удалось создать грузчика")
 	}
 	return nil
 }
@@ -35,7 +27,7 @@ func CreateUser(ctx context.Context, conn *pgxpool.Pool, user interal.Model) err
 //func Check(ctx context.Context, conn *pgxpool.Pool, user interal.Model) (bool, error) {
 //	var count int
 //	q := `
-//			select id from customer
+//			select id from loader
 //			where login = ($1)
 //			`
 //	if err := conn.QueryRow(ctx, q, user.Login).Scan(&count); err != nil {
@@ -45,12 +37,4 @@ func CreateUser(ctx context.Context, conn *pgxpool.Pool, user interal.Model) err
 //		return false, err
 //	}
 //	return count > 0, nil
-//}
-
-//func GetTask(ctx context.Context) (map[string]float64, error) {
-//
-//}
-//
-//func GetInfo(ctx context.Context) (*interal.Model, error) {
-//
 //}

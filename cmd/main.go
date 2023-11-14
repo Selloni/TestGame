@@ -2,8 +2,8 @@ package main
 
 import (
 	"WB/interal"
+	"WB/interal/posgresql"
 	"WB/pkg/handler"
-	"WB/pkg/posgresql"
 	"context"
 	"log"
 )
@@ -13,6 +13,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer conn.Close()
 	tmp := interal.Model{}
 	newHandler := handler.NewHandler(context.Background(), conn, tmp)
 	err = newHandler.Route()

@@ -12,7 +12,7 @@ type Loader struct {
 	Tired  int     `json:"tired,omitempty"`
 }
 
-func GenerateLoader() Loader {
+func GenerateLoader() *Loader {
 	drunk := func() bool {
 		rand.Seed(time.Now().UnixNano())
 		return rand.Intn(2) == 1
@@ -23,5 +23,5 @@ func GenerateLoader() Loader {
 		Drunk:  drunk,
 		Tired:  0,
 	}
-	return loader
+	return &loader
 }

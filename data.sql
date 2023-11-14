@@ -25,7 +25,9 @@ create table loader
     password varchar(100) not null,
     Weight float,
     money int,
-    Drunk  boolean
+    Drunk  boolean,
+    task_id int ,
+    CONSTRAINT task_fk FOREIGN KEY (task_id) REFERENCES task (id)
 );
 
 -- http://localhost:8080/register?login=hh&role=customer&password=123

@@ -3,12 +3,14 @@ package handler
 import (
 	"WB/interal"
 	"WB/interal/customer"
-	"WB/interal/customer/db"
+	dbCustomer "WB/interal/customer/db"
 	"WB/interal/loader"
+	dbLoader "WB/interal/loader/db"
+	"WB/interal/posgresql"
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
 	"net/http"
 )
@@ -17,11 +19,11 @@ import (
 
 type handler struct {
 	ctx  context.Context
-	sql  *pgx.Conn
+	sql  *pgxpool.Pool
 	user interal.Model
 }
 
-func NewHandler(ctx context.Context, sql *pgx.Conn, user interal.Model) *handler {
+func NewHandler(ctx context.Context, sql *pgxpool.Pool, user interal.Model) *handler {
 	return &handler{
 		ctx:  ctx,
 		sql:  sql,
@@ -71,8 +73,8 @@ func (h *handler) registerHandle(w http.ResponseWriter, r *http.Request) {
 	h.user.Role = r.FormValue("role")
 	h.user.Password = r.FormValue("password")
 
-	check, err := db.Check(h.ctx, h.sql, h.user)
-	//defer h.sql.Close(h.ctx)
+	check, err := posgresql.Check(h.ctx, h.sql, h.user)
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Println(err)
@@ -82,17 +84,14 @@ func (h *handler) registerHandle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "пользователь уже существует", http.StatusConflict)
 		return
 	}
-
 	if h.user.Role == "customer" {
-
 		fmt.Println(customer.GenerateCustomer())
 		h.user.Customer = customer.GenerateCustomer()
-		db.CreateUser(h.ctx, h.sql, h.user)
-
+		dbCustomer.CreateUser(h.ctx, h.sql, h.user)
 	} else if h.user.Role == "loader" {
-
 		fmt.Println(loader.GenerateLoader())
-
+		h.user.Loader = loader.GenerateLoader()
+		dbLoader.CreateUser(h.ctx, h.sql, h.user)
 	} else {
 		http.Error(w, "достпуные роли  customer & loader", http.StatusBadRequest)
 		return
