@@ -9,6 +9,7 @@ import (
 	"WB/interal/posgresql"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
 	"net/http"
@@ -47,7 +48,24 @@ func (h *handler) Route() error {
 }
 
 func (h *handler) meHandle(w http.ResponseWriter, r *http.Request) {
-
+	//fmt.Println(r.Header.Get("Authorization"))
+	var x any = h.ctx.Value("token")
+	if x == nil {
+		http.Error(w, "не найден токен авторизации", http.StatusUnauthorized)
+		return
+	}
+	isValid, _, role := interal.ValidateToken(x.(string))
+	if !isValid {
+		fmt.Println(isValid)
+		http.Error(w, "не найден токен авторизации", http.StatusUnauthorized)
+		return
+	}
+	fmt.Println(role)
+	if role == "customer" {
+		fmt.Println(h.user.Customer)
+	} else if role == "loader" {
+		fmt.Println(h.user)
+	}
 }
 
 func (h *handler) startHandle(w http.ResponseWriter, r *http.Request) {
@@ -64,9 +82,20 @@ func (h *handler) loginHandle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "пользователь не найден или неверный пароль", http.StatusUnauthorized)
 		return
 	}
-	w.Write([]byte("Привет"))
-	token := interal.GenerateToken(h.user.Login, h.user.Role)
-	w.Header().Set("Authorization", "Bearer "+token)
+	w.Write([]byte("Привет, ты сегодня чудестно выглядишь "))
+	token, err := interal.GenerateToken(h.user.Login, h.user.Role)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	h.ctx = context.WithValue(h.ctx, "token", token)
+
+	w.WriteHeader(http.StatusOK)
+
+	//fmt.Fprintf(w, token)
+	//w.Write([]byte(token))
+	//w.Header().Set("Authorization", "Bearer "+token)
+	// w - каждый запрос новый w, и так пртсо передать через него не получиться
+	//fmt.Println(w.Header().Get("Authorization"))
 	// ищем пользователя в бд и отправляем токен
 }
 
@@ -81,7 +110,7 @@ func (h *handler) registerHandle(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		w.Write([]byte("customer(заказчик) успешно создан"))
+		fmt.Fprintln(w, "customer(заказчик) успешно создан")
 
 	} else if h.user.Role == "loader" {
 		h.user.Loader = loader.GenerateLoader()
@@ -89,15 +118,19 @@ func (h *handler) registerHandle(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		w.Write([]byte("loader(грузчик) успешно создан"))
+		fmt.Fprintln(w, "loader(грузчик) успешно создан")
 
 	} else {
 		http.Error(w, "достпуные роли  customer & loader", http.StatusBadRequest)
 		return
 	}
-
-	token := interal.GenerateToken(h.user.Login, h.user.Role)
-	w.Header().Set("Authorization", "Bearer "+token)
+	//token, err := interal.GenerateToken(h.user.Login, h.user.Role)
+	//if err != nil {
+	//	http.Error(w, err.Error(), http.StatusInternalServerError)
+	//	return
+	//}
+	//
+	//w.Header().Set("Authorization", "Bearer "+token)
 	w.WriteHeader(http.StatusCreated)
 
 }

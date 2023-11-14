@@ -1,24 +1,37 @@
 package interal
 
-import "github.com/dgrijalva/jwt-go"
+import (
+	"fmt"
+	"github.com/dgrijalva/jwt-go"
+	"log"
+	"time"
+)
 
 //todo:add .evn file
 
-func GenerateToken(login, role string) string {
-	token := jwt.New(jwt.SigningMethodES256)
+const swToken = "grandpat"
+
+func GenerateToken(login, role string) (string, error) {
+	token := jwt.New(jwt.SigningMethodHS256)
 
 	claims := token.Claims.(jwt.MapClaims)
 	claims["login"] = login
 	claims["role"] = role
+	claims["exp"] = time.Now().Add(time.Minute * 60).Unix()
 
-	secret := []byte("nowy!sekrret-1213@KEYlis")
-	tokenString, _ := token.SignedString(secret)
-
-	return tokenString
+	secret := []byte(swToken)
+	tokenString, err := token.SignedString(secret)
+	if err != nil {
+		log.Printf("Token error - %v", err)
+		return "", err
+	}
+	//fmt.Println(tokenString)
+	return tokenString, nil
 }
 
 func ValidateToken(tokenString string) (bool, string, string) {
-	secret := []byte("nowy!sekrret-1213@KEYlis") // Замените на свой секретный ключ
+	fmt.Println(tokenString)
+	secret := []byte(swToken)
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return secret, nil
 	})
@@ -30,6 +43,7 @@ func ValidateToken(tokenString string) (bool, string, string) {
 	claims := token.Claims.(jwt.MapClaims)
 	login := claims["login"].(string)
 	role := claims["role"].(string)
-
+	fmt.Println(login, role)
 	return true, login, role
+	//return true, "login, role", ""
 }
