@@ -60,17 +60,14 @@ func (h *handler) meHandle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "не найден токен авторизации", http.StatusUnauthorized)
 		return
 	}
-	fmt.Println(role)
 	if role == "customer" {
-		fmt.Println(h.user.Customer)
+		//todo: add loader
+		str := fmt.Sprintf("Првиет %s, твой бюджет %d.\nТы можешь нанять этих ребят\n",
+			h.user.Login, h.user.Customer.Money)
+		fmt.Fprint(w, str)
+
 	} else if role == "loader" {
-		h.user.Loader = &loader.Loader{
-			Weight: 12,
-			Salary: 2,
-			Drunk:  false,
-			Tired:  0,
-		}
-		fmt.Println(h.user)
+
 	}
 }
 
@@ -88,13 +85,32 @@ func (h *handler) loginHandle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "пользователь не найден или неверный пароль", http.StatusUnauthorized)
 		return
 	}
-	w.Write([]byte("Привет, ты сегодня чудестно выглядишь "))
+
+	if h.user.Role == "customer" {
+		user, err := dbCustomer.GetInfo(h.ctx, h.sql, h.user.Login)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
+		h.user.Customer = user
+		w.Write([]byte("Привет, ты сегодня чудестно выглядишь "))
+
+	} else if h.user.Role == "loader" {
+		user, err := dbCustomer.GetInfo(h.ctx, h.sql, h.user.Login)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
+		h.user.Customer = user
+		w.Write([]byte("Привет, не переживай все будет хорошо "))
+	}
 	token, err := interal.GenerateToken(h.user.Login, h.user.Role)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	h.ctx = context.WithValue(h.ctx, "token", token)
 
+	h.ctx = context.WithValue(h.ctx, "token", token)
 	w.WriteHeader(http.StatusOK)
 
 	//fmt.Fprintf(w, token)
@@ -116,6 +132,7 @@ func (h *handler) registerHandle(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
 		fmt.Fprintln(w, "customer(заказчик) успешно создан")
 
 	} else if h.user.Role == "loader" {
@@ -130,13 +147,13 @@ func (h *handler) registerHandle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "достпуные роли  customer & loader", http.StatusBadRequest)
 		return
 	}
-	//token, err := interal.GenerateToken(h.user.Login, h.user.Role)
-	//if err != nil {
-	//	http.Error(w, err.Error(), http.StatusInternalServerError)
-	//	return
-	//}
-	//
-	//w.Header().Set("Authorization", "Bearer "+token)
+	token, err := interal.GenerateToken(h.user.Login, h.user.Role)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	h.ctx = context.WithValue(h.ctx, "token", token)
+
 	w.WriteHeader(http.StatusCreated)
 
 }

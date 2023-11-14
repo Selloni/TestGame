@@ -7,7 +7,9 @@ create table customer
     id serial primary key,
     login varchar(100) not null,
     password varchar(100) not null,
-    money int
+    money integer,
+    loader_id integer
+--     CONSTRAINT loader_fk FOREIGN KEY (loader_id) REFERENCES loader (id)
 );
 
 ALTER TABLE customer
@@ -27,14 +29,16 @@ create table loader
     id serial primary key,
     login varchar(100) not null,
     password varchar(100) not null,
-    Weight float,
-    money int,
-    Drunk  boolean,
-    task_id int ,
+    weight float,
+    money integer,
+    drunk  boolean,
+    tired integer,
+    task_id integer ,
     CONSTRAINT task_fk FOREIGN KEY (task_id) REFERENCES task (id)
 );
 
 ALTER TABLE loader
     ADD CONSTRAINT loader_constraint UNIQUE (login);
+
 
 -- http://localhost:8080/register?login=hh&role=customer&password=123

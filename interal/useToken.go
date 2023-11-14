@@ -25,7 +25,6 @@ func GenerateToken(login, role string) (string, error) {
 		log.Printf("Token error - %v", err)
 		return "", err
 	}
-	//fmt.Println(tokenString)
 	return tokenString, nil
 }
 
@@ -45,5 +44,4 @@ func ValidateToken(tokenString string) (bool, string, string) {
 	role := claims["role"].(string)
 	fmt.Println(login, role)
 	return true, login, role
-	//return true, "login, role", ""
 }

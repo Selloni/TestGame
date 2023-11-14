@@ -2,6 +2,7 @@ package db
 
 import (
 	"WB/interal"
+	"WB/interal/loader"
 	"context"
 	"fmt"
 	"github.com/jackc/pgx/v4"
@@ -26,17 +27,21 @@ func CreateUser(ctx context.Context, conn *pgxpool.Pool, user interal.Model) err
 	return nil
 }
 
-//func Check(ctx context.Context, conn *pgxpool.Pool, user interal.Model) (bool, error) {
-//	var count int
-//	q := `
-//			select id from loader
-//			where login = ($1)
-//			`
-//	if err := conn.QueryRow(ctx, q, user.Login).Scan(&count); err != nil {
-//		if err == pgx.ErrNoRows {
-//			return false, nil
-//		}
-//		return false, err
-//	}
-//	return count > 0, nil
-//}
+func GetInfo(ctx context.Context, conn *pgxpool.Pool, login string) ([]loader.Loader, error) {
+	q := `
+		select weight, money, drunk, tired from loader where login = $1
+	`
+
+	rows, err := conn.Query(ctx, q, login)
+
+	loaderInfo := make([]loader.Loader, 0)
+
+	for rows.Next() {
+		var load loader.Loader
+		if err = rows.Scan(&load.Weight, &load.Salary, &load.Drunk, &load.Tired); err != nil {
+			return nil, err
+		}
+		loaderInfo = append(loaderInfo, load)
+	}
+	return loaderInfo, nil
+}

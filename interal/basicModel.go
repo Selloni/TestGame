@@ -12,15 +12,3 @@ type Model struct {
 	Customer *customer.Customer `json:"customer,omitempty"`
 	Loader   *loader.Loader     `json:"loader,omitempty"`
 }
-
-//type User struct {
-//	Username string
-//	Password string
-//	Role     string
-//}
-//
-//type Customer struct {
-//}
-//
-//type Worker struct {
-//}

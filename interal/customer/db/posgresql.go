@@ -2,6 +2,7 @@ package db
 
 import (
 	"WB/interal"
+	"WB/interal/customer"
 	"context"
 	"fmt"
 	"github.com/jackc/pgx/v4"
@@ -24,7 +25,6 @@ func CreateUser(ctx context.Context, conn *pgxpool.Pool, user interal.Model) err
 			(login, password, money)
 		values 
 		    ($1,$2,$3)
--- 		returning id
 		`
 	err := conn.QueryRow(ctx, q, user.Login, user.Password, user.Customer.Money).Scan()
 	if err != nil {
@@ -36,25 +36,19 @@ func CreateUser(ctx context.Context, conn *pgxpool.Pool, user interal.Model) err
 	return nil
 }
 
-//func Check(ctx context.Context, conn *pgxpool.Pool, user interal.Model) (bool, error) {
-//	var count int
-//	q := `
-//			select id from customer
-//			where login = ($1)
-//			`
-//	if err := conn.QueryRow(ctx, q, user.Login).Scan(&count); err != nil {
-//		if err == pgx.ErrNoRows {
-//			return false, nil
-//		}
-//		return false, err
-//	}
-//	return count > 0, nil
-//}
-
 //func GetTask(ctx context.Context) (map[string]float64, error) {
 //
 //}
 //
-//func GetInfo(ctx context.Context) (*interal.Model, error) {
-//
-//}
+
+func GetInfo(ctx context.Context, conn *pgxpool.Pool, login string) (*customer.Customer, error) {
+	q := `
+		select money from customer where login = $1
+	`
+	var cust customer.Customer
+	err := conn.QueryRow(ctx, q, login).Scan(&cust.Money)
+	if err != nil {
+		return &customer.Customer{}, err
+	}
+	return &cust, nil
+}
