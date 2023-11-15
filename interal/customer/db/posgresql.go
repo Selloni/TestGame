@@ -73,3 +73,16 @@ func GetAllTask(ctx context.Context, conn *pgxpool.Pool) ([]task.Task, error) {
 	}
 	return arrTask, nil
 }
+
+func UpdateCustomer(ctx context.Context, conn *pgxpool.Pool, user interal.Model) error {
+	q := `
+		update customer
+			set money = $1
+			where login = $2
+	`
+	_, err := conn.Exec(ctx, q, user.Customer.Money, user.Login)
+	if err != nil {
+		return err
+	}
+	return nil
+}

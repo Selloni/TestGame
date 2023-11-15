@@ -95,6 +95,24 @@ func GetTask(ctx context.Context, conn *pgxpool.Pool) ([]task.Task, error) {
 	return arrTask, nil
 }
 
-func UpdateLoader(ctx context.Context, conn *pgxpool.Pool) {
-
+func UpdateLoader(ctx context.Context, conn *pgxpool.Pool, taskId int, loadersId map[int]loader.Loader) (err error) {
+	q := `
+		update loader
+			set task_id = $1, tired = $2
+			where id = $3
+	`
+	for k, v := range loadersId {
+		if v.Drunk {
+			v.Tired = +30
+		}
+		if v.Tired > 80 {
+			_, err = conn.Exec(ctx, q, taskId, 100, k)
+		} else {
+			_, err = conn.Exec(ctx, q, taskId, v.Tired+20, k)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

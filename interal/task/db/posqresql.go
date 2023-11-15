@@ -29,17 +29,15 @@ func CreateTask(ctx context.Context, conn *pgxpool.Pool) (map[string]int, error)
 	return mm, nil
 }
 
-func UpdateTask(ctx context.Context, conn *pgxpool.Pool, tt []int) error {
+func UpdateTask(ctx context.Context, conn *pgxpool.Pool, id int) error {
 	q := `
-		update loader
+		update task
 			set done = true
-			where id = &1
+			where id = $1
 	`
-	for _, id := range tt {
-		_, err := conn.Exec(ctx, q, id)
-		if err != nil {
-			return err
-		}
+	_, err := conn.Exec(ctx, q, id)
+	if err != nil {
+		return err
 	}
 	return nil
 }
