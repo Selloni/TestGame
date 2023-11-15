@@ -12,3 +12,8 @@ type Model struct {
 	Customer *customer.Customer `json:"customer,omitempty"`
 	Loader   *loader.Loader     `json:"loader,omitempty"`
 }
+
+type StartGame struct {
+	taskId  string   `json:"taskId"`
+	loaders []string `json:"loaders"`
+}

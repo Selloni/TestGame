@@ -9,7 +9,9 @@ import (
 	"WB/interal/posgresql"
 	dbTask "WB/interal/task/db"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 )
@@ -36,6 +38,7 @@ func (h *handler) meHandle(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		fmt.Fprint(w, str, "\n")
+		//todo: песречитать вес грузчикам
 		fmt.Fprint(w, "id вес ЗП Пьет Устал\n")
 		for i := range allLoader {
 			fmt.Fprint(w, allLoader[i], "\n")
@@ -55,6 +58,45 @@ func (h *handler) meHandle(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) startHandle(w http.ResponseWriter, r *http.Request) {
+	var x any = h.ctx.Value("token")
+	if x == nil {
+		http.Error(w, "не найден токен авторизации", http.StatusUnauthorized)
+		return
+	}
+	isValid, _, role := interal.ValidateToken(x.(string))
+	if !isValid {
+		http.Error(w, "не валидный токен", http.StatusUnauthorized)
+		return
+	}
+	if role != "customer" {
+		http.Error(w, "Извини, доступ запрещен", http.StatusForbidden)
+		return
+	}
+
+	//var game interal.StartGame
+	//
+	//err := json.NewDecoder(r.Body).Decode(&game)
+	//if err != nil {
+	//	http.Error(w, err.Error(), http.StatusBadRequest)
+	//	return
+	//}
+	//fmt.Println(game)
+	//fmt.Fprintf(w, "Тело запроса: %v", game)
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Ошибка чтения тела запроса", http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	// Распаковка JSON данных в структуру StartGame
+	var startGame interal.StartGame
+	if err := json.Unmarshal(body, &startGame); err != nil {
+		http.Error(w, "Ошибка разбора JSON", http.StatusBadRequest)
+		return
+	}
+	fmt.Println(startGame)
 
 }
 
