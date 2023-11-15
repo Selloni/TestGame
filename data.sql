@@ -19,7 +19,7 @@ create table task
 (
     id serial primary key,
     name varchar(100),
-    weight varchar(100) not null,
+    weight integer not null,
     done boolean default false
 );
 
@@ -29,7 +29,7 @@ create table loader
     id serial primary key,
     login varchar(100) not null,
     password varchar(100) not null,
-    weight float,
+    weight integer,
     money integer,
     drunk  boolean,
     tired integer default 0,

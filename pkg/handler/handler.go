@@ -8,44 +8,12 @@ import (
 	dbLoader "WB/interal/loader/db"
 	"WB/interal/posgresql"
 	"context"
-	"encoding/json"
 	"fmt"
-	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
 	"net/http"
 )
 
 // todo: midlle, config
-
-type handler struct {
-	ctx  context.Context
-	sql  *pgxpool.Pool
-	user interal.Model
-}
-
-func NewHandler(ctx context.Context, sql *pgxpool.Pool, user interal.Model) *handler {
-	return &handler{
-		ctx:  ctx,
-		sql:  sql,
-		user: user,
-	}
-}
-
-func (h *handler) Route() error {
-
-	http.HandleFunc("/login", h.loginHandle)
-	http.HandleFunc("/register", h.registerHandle)
-	http.HandleFunc("/tasks", h.tasksHandler)
-	http.HandleFunc("/me", h.meHandle)
-	http.HandleFunc("/start", h.startHandle)
-
-	log.Println("listen port: 8080")
-	err := http.ListenAndServe(":8080", nil)
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
 func (h *handler) meHandle(w http.ResponseWriter, r *http.Request) {
 	var x any = h.ctx.Value("token")
@@ -78,7 +46,11 @@ func (h *handler) meHandle(w http.ResponseWriter, r *http.Request) {
 			h.user.Login, h.user.Loader.Weight, h.user.Loader.Salary,
 			h.user.Loader.Drunk, h.user.Loader.Tired)
 		fmt.Fprint(w, str)
+	} else {
+		http.Error(w, "не определили роль", http.StatusInternalServerError)
+		return
 	}
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *handler) startHandle(w http.ResponseWriter, r *http.Request) {
@@ -163,28 +135,57 @@ func (h *handler) registerHandle(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) tasksHandler(w http.ResponseWriter, r *http.Request) {
-	// бд для задач куда будем сохранять
-	task := h.generateTask()
-	data, err := json.Marshal(task)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	var x any = h.ctx.Value("token")
+	if x == nil {
+		if err := h.taskPublic(w); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusCreated)
 		return
 	}
-	// для верного интерпретирвания данных
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(data)
+	isValid, _, role := interal.ValidateToken(x.(string))
+	if !isValid {
+		http.Error(w, "не валидный токен", http.StatusUnauthorized)
+		return
+	}
+	if role == "customer" {
+		if err := h.taskCustomer(w); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	} else if role == "loader" {
+		fmt.Println("logika")
+	}
 }
 
-func (h *handler) generateTask() map[string]int {
-	// либо на месте случайно гененрировать товары
-	// либо доставать случайное из бд уже сгенерированные
-	var mm = map[string]int{
-		"bead":   18,
-		"fridge": 21,
-		"TV":     12,
-		"spoon":  2,
+func (h *handler) taskPublic(w http.ResponseWriter) error {
+	mm, err := posgresql.CreateTask(h.ctx, h.sql)
+	posgresql.CreateTask(h.ctx, h.sql)
+	if err != nil {
+		return err
 	}
-	return mm
+	fmt.Fprint(w, "Создали новые задания\n")
+	for k, v := range mm {
+		fmt.Fprint(w, fmt.Sprintf("товар %s - вес %d\n", k, v))
+	}
+	return nil
+}
+
+func (h *handler) taskCustomer(w http.ResponseWriter) error {
+	log.Printf("Get task for customer")
+	allTask, err := dbCustomer.GetAllTask(h.ctx, h.sql)
+	if err != nil {
+		log.Printf("err %v", err)
+		return err
+	}
+	for _, task := range allTask {
+		fmt.Fprint(w, fmt.Sprintf("id - %d, name - %s, weight - %d",
+			task.Id, task.Name, task.Weight), "\n")
+	}
+	return nil
+
 }
 
 func (h *handler) existsUser(r *http.Request) (error, bool) {

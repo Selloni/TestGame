@@ -6,11 +6,11 @@ import (
 )
 
 type Loader struct {
-	Id     uint    `json:"-"`
-	Weight float64 `json:"weight,omitempty"`
-	Salary int     `json:"salary,omitempty"`
-	Drunk  bool    `json:"drunk,omitempty"`
-	Tired  int     `json:"tired,omitempty"`
+	Id     uint `json:"-"`
+	Weight int  `json:"weight,omitempty"`
+	Salary int  `json:"salary,omitempty"`
+	Drunk  bool `json:"drunk,omitempty"`
+	Tired  int  `json:"tired,omitempty"`
 }
 
 func GenerateLoader() *Loader {
@@ -19,7 +19,7 @@ func GenerateLoader() *Loader {
 		return rand.Intn(2) == 1
 	}()
 	loader := Loader{
-		Weight: 5 + rand.Float64()*(25),
+		Weight: rand.Intn(25) + 5,
 		Salary: rand.Intn(20000) + 10000,
 		Drunk:  drunk,
 		Tired:  0,

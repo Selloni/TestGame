@@ -15,8 +15,6 @@ import (
 //	Begin(ctx context.Context) (pgx.Tx, error)
 //}
 
-// todo:config
-
 func Check(ctx context.Context, conn *pgxpool.Pool, user interal.Model) (bool, error) {
 	var count int
 	q := fmt.Sprintf(`
@@ -31,6 +29,28 @@ func Check(ctx context.Context, conn *pgxpool.Pool, user interal.Model) (bool, e
 	}
 	return count > 0, nil
 }
+
+func CreateTask(ctx context.Context, conn *pgxpool.Pool) (map[string]int, error) {
+	mm := generateItem()
+	q := `
+		insert into task
+			(name, weight)
+		values
+		    ($1,$2)
+	`
+	for str, i := range mm {
+		err := conn.QueryRow(ctx, q, str, i).Scan()
+		if err != nil {
+			if err == pgx.ErrNoRows {
+				continue
+			}
+			return nil, fmt.Errorf("не удалось создать груз")
+		}
+	}
+	return mm, nil
+}
+
+// todo:config
 
 func NewClient(ctx context.Context) (*pgxpool.Pool, error) {
 	connConfig := "postgres://grandpat:grandpat@localhost:5432/postgres"

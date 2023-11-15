@@ -1,7 +1,6 @@
 package interal
 
 import (
-	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"log"
 	"time"
@@ -25,11 +24,11 @@ func GenerateToken(login, role string) (string, error) {
 		log.Printf("Token error - %v", err)
 		return "", err
 	}
+	log.Println("create token with role", role)
 	return tokenString, nil
 }
 
 func ValidateToken(tokenString string) (bool, string, string) {
-	fmt.Println(tokenString)
 	secret := []byte(swToken)
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return secret, nil
@@ -42,6 +41,5 @@ func ValidateToken(tokenString string) (bool, string, string) {
 	claims := token.Claims.(jwt.MapClaims)
 	login := claims["login"].(string)
 	role := claims["role"].(string)
-	fmt.Println(login, role)
 	return true, login, role
 }

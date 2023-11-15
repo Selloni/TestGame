@@ -3,13 +3,14 @@ package db
 import (
 	"WB/interal"
 	"WB/interal/customer"
+	"WB/interal/task"
 	"context"
 	"fmt"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-//type repository struct {
+// todo:type repository struct {
 //	sql *pgx.Conn
 //}
 //
@@ -36,11 +37,6 @@ func CreateUser(ctx context.Context, conn *pgxpool.Pool, user interal.Model) err
 	return nil
 }
 
-//func GetTask(ctx context.Context) (map[string]float64, error) {
-//
-//}
-//
-
 func GetInfo(ctx context.Context, conn *pgxpool.Pool, login string) (*customer.Customer, error) {
 	q := `
 		select money from customer where login = $1
@@ -51,4 +47,30 @@ func GetInfo(ctx context.Context, conn *pgxpool.Pool, login string) (*customer.C
 		return nil, err
 	}
 	return &cust, nil
+}
+
+func GetAllTask(ctx context.Context, conn *pgxpool.Pool) ([]task.Task, error) {
+	arrTask := make([]task.Task, 0)
+	q := `
+		select id, name, weight from task where done = false
+		`
+	rows, err := conn.Query(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var t task.Task
+
+		if err := rows.Scan(&t.Id, &t.Name, &t.Weight); err != nil {
+			return nil, err
+		}
+		arrTask = append(arrTask, t)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return arrTask, nil
+
 }
