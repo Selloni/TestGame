@@ -3,6 +3,7 @@ package db
 import (
 	"WB/interal"
 	"WB/interal/loader"
+	"WB/interal/task"
 	"context"
 	"fmt"
 	"github.com/jackc/pgx/v4"
@@ -64,4 +65,36 @@ func GetAllLoader(ctx context.Context, conn *pgxpool.Pool) ([]loader.Loader, err
 		return nil, err
 	}
 	return arrLoader, nil
+}
+
+//todo:check link
+func GetTask(ctx context.Context, conn *pgxpool.Pool) ([]task.Task, error) {
+	arrTask := make([]task.Task, 0)
+	q := `
+		select name, weight from task
+			inner join loader 
+				on task.id = loader.task_id
+		`
+	rows, err := conn.Query(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var t task.Task
+
+		if err := rows.Scan(&t.Id, &t.Name, &t.Weight); err != nil {
+			return nil, err
+		}
+		arrTask = append(arrTask, t)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return arrTask, nil
+}
+
+func UpdateLoader(ctx context.Context, conn *pgxpool.Pool) {
+
 }

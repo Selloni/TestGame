@@ -7,6 +7,7 @@ import (
 	"WB/interal/loader"
 	dbLoader "WB/interal/loader/db"
 	"WB/interal/posgresql"
+	dbTask "WB/interal/task/db"
 	"context"
 	"fmt"
 	"log"
@@ -161,8 +162,8 @@ func (h *handler) tasksHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) taskPublic(w http.ResponseWriter) error {
-	mm, err := posgresql.CreateTask(h.ctx, h.sql)
-	posgresql.CreateTask(h.ctx, h.sql)
+	mm, err := dbTask.CreateTask(h.ctx, h.sql)
+	dbTask.CreateTask(h.ctx, h.sql)
 	if err != nil {
 		return err
 	}
