@@ -48,7 +48,6 @@ func (h *handler) Route() error {
 }
 
 func (h *handler) meHandle(w http.ResponseWriter, r *http.Request) {
-	//fmt.Println(r.Header.Get("Authorization"))
 	var x any = h.ctx.Value("token")
 	if x == nil {
 		http.Error(w, "не найден токен авторизации", http.StatusUnauthorized)
@@ -56,18 +55,29 @@ func (h *handler) meHandle(w http.ResponseWriter, r *http.Request) {
 	}
 	isValid, _, role := interal.ValidateToken(x.(string))
 	if !isValid {
-		fmt.Println(isValid)
-		http.Error(w, "не найден токен авторизации", http.StatusUnauthorized)
+		http.Error(w, "не валидный токен", http.StatusUnauthorized)
 		return
 	}
 	if role == "customer" {
-		//todo: add loader
-		str := fmt.Sprintf("Првиет %s, твой бюджет %d.\nТы можешь нанять этих ребят\n",
+		str := fmt.Sprintf("Привет %s, твой бюджет %d.\nТы можешь нанять этих ребят\n",
 			h.user.Login, h.user.Customer.Money)
-		fmt.Fprint(w, str)
+		allLoader, err := dbLoader.GetAllLoader(h.ctx, h.sql)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		fmt.Fprint(w, str, "\n")
+		fmt.Fprint(w, "id вес ЗП Пьет Устал\n")
+		for i := range allLoader {
+			fmt.Fprint(w, allLoader[i], "\n")
+		}
 
 	} else if role == "loader" {
-
+		str := fmt.Sprintf("Привет %s твоя анкета:\nМакс вес - %v\nЗП - "+
+			"%d\nВредные привычки - %t\nУсталость - %d\n",
+			h.user.Login, h.user.Loader.Weight, h.user.Loader.Salary,
+			h.user.Loader.Drunk, h.user.Loader.Tired)
+		fmt.Fprint(w, str)
 	}
 }
 
@@ -89,19 +99,21 @@ func (h *handler) loginHandle(w http.ResponseWriter, r *http.Request) {
 	if h.user.Role == "customer" {
 		user, err := dbCustomer.GetInfo(h.ctx, h.sql, h.user.Login)
 		if err != nil {
+			log.Printf("aut Customer err -%v\n", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
 		h.user.Customer = user
-		w.Write([]byte("Привет, ты сегодня чудестно выглядишь "))
+		w.Write([]byte("Привет, ты сегодня чудесно выглядишь "))
 
 	} else if h.user.Role == "loader" {
-		user, err := dbCustomer.GetInfo(h.ctx, h.sql, h.user.Login)
+		user, err := dbLoader.GetInfo(h.ctx, h.sql, h.user.Login)
 		if err != nil {
+			log.Printf("aut Loader err -%v\n", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
-
-		h.user.Customer = user
+		h.user.Loader = user
 		w.Write([]byte("Привет, не переживай все будет хорошо "))
 	}
 	token, err := interal.GenerateToken(h.user.Login, h.user.Role)
@@ -112,13 +124,6 @@ func (h *handler) loginHandle(w http.ResponseWriter, r *http.Request) {
 
 	h.ctx = context.WithValue(h.ctx, "token", token)
 	w.WriteHeader(http.StatusOK)
-
-	//fmt.Fprintf(w, token)
-	//w.Write([]byte(token))
-	//w.Header().Set("Authorization", "Bearer "+token)
-	// w - каждый запрос новый w, и так пртсо передать через него не получиться
-	//fmt.Println(w.Header().Get("Authorization"))
-	// ищем пользователя в бд и отправляем токен
 }
 
 func (h *handler) registerHandle(w http.ResponseWriter, r *http.Request) {
@@ -132,7 +137,6 @@ func (h *handler) registerHandle(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
 		fmt.Fprintln(w, "customer(заказчик) успешно создан")
 
 	} else if h.user.Role == "loader" {

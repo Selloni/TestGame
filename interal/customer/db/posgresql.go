@@ -48,7 +48,7 @@ func GetInfo(ctx context.Context, conn *pgxpool.Pool, login string) (*customer.C
 	var cust customer.Customer
 	err := conn.QueryRow(ctx, q, login).Scan(&cust.Money)
 	if err != nil {
-		return &customer.Customer{}, err
+		return nil, err
 	}
 	return &cust, nil
 }

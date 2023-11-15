@@ -27,21 +27,41 @@ func CreateUser(ctx context.Context, conn *pgxpool.Pool, user interal.Model) err
 	return nil
 }
 
-func GetInfo(ctx context.Context, conn *pgxpool.Pool, login string) ([]loader.Loader, error) {
+func GetInfo(ctx context.Context, conn *pgxpool.Pool, login string) (*loader.Loader, error) {
 	q := `
-		select weight, money, drunk, tired from loader where login = $1
+		select weight, money, drunk, tired from loader where login = $1;
 	`
+	rows := conn.QueryRow(ctx, q, login)
+	var load loader.Loader
 
-	rows, err := conn.Query(ctx, q, login)
+	if err := rows.Scan(&load.Weight, &load.Salary, &load.Drunk, &load.Tired); err != nil {
+		return nil, err
+	}
 
-	loaderInfo := make([]loader.Loader, 0)
+	return &load, nil
+}
+
+func GetAllLoader(ctx context.Context, conn *pgxpool.Pool) ([]loader.Loader, error) {
+	arrLoader := make([]loader.Loader, 0)
+	q := `
+		select id, weight, money, drunk, tired from loader;
+	`
+	rows, err := conn.Query(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var load loader.Loader
-		if err = rows.Scan(&load.Weight, &load.Salary, &load.Drunk, &load.Tired); err != nil {
+
+		if err := rows.Scan(&load.Id, &load.Weight, &load.Salary, &load.Drunk, &load.Tired); err != nil {
 			return nil, err
 		}
-		loaderInfo = append(loaderInfo, load)
+		arrLoader = append(arrLoader, load)
 	}
-	return loaderInfo, nil
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return arrLoader, nil
 }

@@ -32,7 +32,7 @@ create table loader
     weight float,
     money integer,
     drunk  boolean,
-    tired integer,
+    tired integer default 0,
     task_id integer ,
     CONSTRAINT task_fk FOREIGN KEY (task_id) REFERENCES task (id)
 );
