@@ -29,16 +29,16 @@ func NewGameItem(ctx context.Context, user interal.Model, sql *pgxpool.Pool) *ga
 func (g *gameItem) StartGame(taskId int, loadersId []int) (int, error) {
 	log.Println("Начали игру id task", taskId, loadersId)
 	// todo:перписать не стоит всех воркеров беспокоить
-	allLoader, err := dbLoader.GetAllLoader(g.ctx, g.sql)
+	mm, err := dbLoader.GetLoaders(g.ctx, g.sql, loadersId)
 	if err != nil {
 		return 2, err
 	}
 	var weightSum int
 	var salarySum int
-	mm := make(map[int]loader.Loader)
-	for _, ll := range allLoader {
-		mm[ll.Id] = ll
-	}
+	//mm := make(map[int]loader.Loader)
+	//for _, ll := range allLoader {
+	//	mm[ll.Id] = ll
+	//}
 	for _, lId := range loadersId {
 		salarySum = salarySum + mm[lId].Salary
 		weightSum = weightSum + g.portableWeight(mm[lId])

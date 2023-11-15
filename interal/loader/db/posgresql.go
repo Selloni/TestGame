@@ -67,6 +67,33 @@ func GetAllLoader(ctx context.Context, conn *pgxpool.Pool) ([]loader.Loader, err
 	return arrLoader, nil
 }
 
+func GetLoaders(ctx context.Context, conn *pgxpool.Pool, id []int) (map[int]loader.Loader, error) {
+	ml := make(map[int]loader.Loader, len(id))
+	q := `
+		select id, weight, money, drunk, tired from loader
+			where id = $1
+	`
+	for i := range id {
+		rows, err := conn.Query(ctx, q, i)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var load loader.Loader
+			if err := rows.Scan(&load.Id, &load.Weight, &load.Salary, &load.Drunk, &load.Tired); err != nil {
+				return nil, err
+			}
+			ml[load.Id] = load
+		}
+		if err = rows.Err(); err != nil {
+			return nil, err
+		}
+		return ml, nil
+	}
+}
+
 //todo:check link
 func GetTask(ctx context.Context, conn *pgxpool.Pool) ([]task.Task, error) {
 	arrTask := make([]task.Task, 0)
