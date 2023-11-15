@@ -3,37 +3,68 @@ package service
 import (
 	"WB/interal"
 	"WB/interal/loader"
-	"WB/interal/loader/db"
+	dbLoader "WB/interal/loader/db"
+	dbTask "WB/interal/task/db"
 	"context"
+	"fmt"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"log"
 )
 
-type GameItem struct {
-	user interal.Model
+type gameItem struct {
 	ctx  context.Context
+	user interal.Model
 	sql  *pgxpool.Pool
 }
 
-func (g *GameItem) StartGame(taskId int, loadersId []int) (bool, error) {
-	allLoader, err := db.GetAllLoader(g.ctx, g.sql)
+func NewGameItem(ctx context.Context, user interal.Model, sql *pgxpool.Pool) *gameItem {
+	return &gameItem{
+		ctx:  ctx,
+		user: user,
+		sql:  sql,
+	}
+}
+
+func (g *gameItem) StartGame(taskId int, loadersId []int) (int, error) {
+	log.Println("Начали игру id task", taskId, loadersId)
+	// todo:перписать не стоит всех воркеров доставать
+	allLoader, err := dbLoader.GetAllLoader(g.ctx, g.sql)
+	if err != nil {
+		return 2, err
+	}
 	var weightSum int
 	var salarySum int
 	mm := make(map[int]loader.Loader)
-	if err != nil {
-		return false, err
-	}
 	for _, ll := range allLoader {
 		mm[ll.Id] = ll
 	}
-	for _, lid := range loadersId {
-		g.PortableWeight(mm[lid])
-		salarySum = salarySum + mm[lid].Salary
-		weightSum = weightSum + g.PortableWeight(mm[lid])
+	for _, lId := range loadersId {
+		fmt.Println(mm[lId])
+		salarySum = salarySum + mm[lId].Salary
+		weightSum = weightSum + g.portableWeight(mm[lId])
 	}
-	return false, nil
+
+	if g.user.Customer.Money < salarySum {
+		return 1, fmt.Errorf("Недостаточно денег")
+	}
+
+	selectTask, err := dbTask.GetTask(g.ctx, g.sql, taskId)
+	if err != nil {
+		return 2, err
+	}
+
+	if weightSum < selectTask.Weight {
+		return 1, fmt.Errorf("Задача оказался тяжелой")
+	}
+
+	//dbTask.UpdateTask()
+	//dbLoader.UpdateLoader()
+	//UpdateCustomer()
+
+	return 0, nil
 }
 
-func (g *GameItem) PortableWeight(ll loader.Loader) (itog int) {
+func (g *gameItem) portableWeight(ll loader.Loader) (itog int) {
 	if ll.Drunk {
 		itog = ll.Weight * (100 - (ll.Tired+50)/100) * (2 / 100)
 	} else {

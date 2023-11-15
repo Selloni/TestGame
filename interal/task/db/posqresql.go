@@ -1,6 +1,7 @@
 package db
 
 import (
+	"WB/interal/task"
 	"context"
 	"fmt"
 	"github.com/jackc/pgx/v4"
@@ -28,7 +29,7 @@ func CreateTask(ctx context.Context, conn *pgxpool.Pool) (map[string]int, error)
 	return mm, nil
 }
 
-func UpdateItem(ctx context.Context, conn *pgxpool.Pool, tt []int) error {
+func UpdateTask(ctx context.Context, conn *pgxpool.Pool, tt []int) error {
 	q := `
 		update loader
 			set done = true
@@ -41,6 +42,18 @@ func UpdateItem(ctx context.Context, conn *pgxpool.Pool, tt []int) error {
 		}
 	}
 	return nil
+}
+
+func GetTask(ctx context.Context, conn *pgxpool.Pool, item int) (oneTask task.Task, err error) {
+	q := `
+			select name, weight from task where id = $1;
+		`
+	rows := conn.QueryRow(ctx, q, item)
+
+	if err = rows.Scan(&oneTask.Name, &oneTask.Weight); err != nil {
+		return task.Task{}, err
+	}
+	return oneTask, nil
 }
 
 // support func

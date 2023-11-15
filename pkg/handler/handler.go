@@ -8,6 +8,7 @@ import (
 	dbLoader "WB/interal/loader/db"
 	"WB/interal/posgresql"
 	dbTask "WB/interal/task/db"
+	"WB/service"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -78,8 +79,18 @@ func (h *handler) startHandle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	fmt.Fprintf(w, "Тело запроса: %v", game)
-
+	gg := service.NewGameItem(h.ctx, h.user, h.sql)
+	gameErr, mess := gg.StartGame(game.TaskId, game.Loaders)
+	if gameErr == 2 {
+		log.Printf("game err %v", mess)
+		http.Error(w, mess.Error(), http.StatusInternalServerError)
+		return
+	} else if gameErr == 1 {
+		fmt.Fprint(w, "(C.C ... Ты проиграл, не переживай в другой раз получиться\n", mess.Error())
+	} else {
+		fmt.Fprint(w, "Продолжай в том же духе )")
+	}
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *handler) loginHandle(w http.ResponseWriter, r *http.Request) {
