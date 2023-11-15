@@ -14,6 +14,6 @@ type Model struct {
 }
 
 type StartGame struct {
-	taskId  string   `json:"taskId"`
-	loaders []string `json:"loaders"`
+	TaskId  string   `json:"taskId"`
+	Loaders []string `json:"loaders"`
 }

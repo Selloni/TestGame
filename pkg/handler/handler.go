@@ -11,7 +11,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 )
@@ -72,31 +71,14 @@ func (h *handler) startHandle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Извини, доступ запрещен", http.StatusForbidden)
 		return
 	}
-
-	//var game interal.StartGame
-	//
-	//err := json.NewDecoder(r.Body).Decode(&game)
-	//if err != nil {
-	//	http.Error(w, err.Error(), http.StatusBadRequest)
-	//	return
-	//}
-	//fmt.Println(game)
-	//fmt.Fprintf(w, "Тело запроса: %v", game)
-
-	body, err := ioutil.ReadAll(r.Body)
+	var game interal.StartGame
+	err := json.NewDecoder(r.Body).Decode(&game)
 	if err != nil {
-		http.Error(w, "Ошибка чтения тела запроса", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
-
-	// Распаковка JSON данных в структуру StartGame
-	var startGame interal.StartGame
-	if err := json.Unmarshal(body, &startGame); err != nil {
-		http.Error(w, "Ошибка разбора JSON", http.StatusBadRequest)
-		return
-	}
-	fmt.Println(startGame)
+	fmt.Println(game)
+	fmt.Fprintf(w, "Тело запроса: %v", game)
 
 }
 
