@@ -72,5 +72,4 @@ func GetAllTask(ctx context.Context, conn *pgxpool.Pool) ([]task.Task, error) {
 		return nil, err
 	}
 	return arrTask, nil
-
 }

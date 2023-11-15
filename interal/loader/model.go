@@ -6,7 +6,7 @@ import (
 )
 
 type Loader struct {
-	Id     uint `json:"-"`
+	Id     int  `json:"-"`
 	Weight int  `json:"weight,omitempty"`
 	Salary int  `json:"salary,omitempty"`
 	Drunk  bool `json:"drunk,omitempty"`

@@ -13,7 +13,7 @@ type Model struct {
 	Loader   *loader.Loader     `json:"loader,omitempty"`
 }
 
-type StartGame struct {
+type StartGameRequest struct {
 	TaskId  string   `json:"taskId"`
 	Loaders []string `json:"loaders"`
 }

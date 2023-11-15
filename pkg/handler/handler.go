@@ -71,13 +71,13 @@ func (h *handler) startHandle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Извини, доступ запрещен", http.StatusForbidden)
 		return
 	}
-	var game interal.StartGame
+
+	var game interal.StartGameRequest
 	err := json.NewDecoder(r.Body).Decode(&game)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	fmt.Println(game)
 	fmt.Fprintf(w, "Тело запроса: %v", game)
 
 }
