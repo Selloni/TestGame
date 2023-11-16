@@ -1,6 +1,7 @@
 package posgresql
 
 import (
+	"WB/config"
 	"WB/interal"
 	"context"
 	"fmt"
@@ -23,11 +24,11 @@ func Check(ctx context.Context, conn *pgxpool.Pool, user interal.Model) (bool, e
 	return count > 0, nil
 }
 
-// todo:config
+//todo:config
 
 func NewClient(ctx context.Context) (*pgxpool.Pool, error) {
-	connConfig := "postgres://grandpat:grandpat@localhost:5432/postgres"
-	conn, err := pgxpool.Connect(context.Background(), connConfig)
+	conf := config.GetConfig()
+	conn, err := pgxpool.Connect(context.Background(), conf.Posqres)
 	if err != nil {
 		fmt.Errorf("Ошибка при подключении к базе данных:%v", err)
 	}
