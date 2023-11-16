@@ -16,7 +16,6 @@ func CreateUser(ctx context.Context, conn *pgxpool.Pool, user interal.Model) err
 			(login, password, weight, money, drunk)
 		values 
 		    ($1,$2,$3,$4,$5)
--- 		returning id
 		`
 	err := conn.QueryRow(ctx, q, user.Login, user.Password, user.Loader.Weight, user.Loader.Salary, user.Loader.Drunk).Scan()
 	if err != nil {
@@ -51,7 +50,6 @@ func GetAllLoader(ctx context.Context, conn *pgxpool.Pool) ([]loader.Loader, err
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
 	for rows.Next() {
 		var load loader.Loader
@@ -69,6 +67,7 @@ func GetAllLoader(ctx context.Context, conn *pgxpool.Pool) ([]loader.Loader, err
 
 func GetLoaders(ctx context.Context, conn *pgxpool.Pool, id []int) (map[int]loader.Loader, error) {
 	ml := make(map[int]loader.Loader, len(id))
+
 	q := `
 		select id, weight, money, drunk, tired from loader
 			where id = $1
@@ -78,7 +77,6 @@ func GetLoaders(ctx context.Context, conn *pgxpool.Pool, id []int) (map[int]load
 		if err != nil {
 			return nil, err
 		}
-		defer rows.Close()
 
 		for rows.Next() {
 			var load loader.Loader
@@ -91,7 +89,6 @@ func GetLoaders(ctx context.Context, conn *pgxpool.Pool, id []int) (map[int]load
 			return nil, err
 		}
 	}
-	fmt.Println("map", ml)
 	return ml, nil
 }
 
@@ -120,7 +117,6 @@ func GetTask(ctx context.Context, conn *pgxpool.Pool, login string) ([]task.Task
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
 	for rows.Next() {
 		var data task.Task

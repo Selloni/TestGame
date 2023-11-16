@@ -2,8 +2,8 @@ package main
 
 import (
 	"WB/interal"
+	"WB/interal/handler"
 	"WB/interal/posgresql"
-	"WB/pkg/handler"
 	"context"
 	"log"
 )

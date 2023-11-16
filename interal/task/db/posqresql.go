@@ -54,12 +54,10 @@ func GetTask(ctx context.Context, conn *pgxpool.Pool, item int) (oneTask task.Ta
 	return oneTask, nil
 }
 
-// support func
 func generateItem() map[string]int {
 	countItem := rand.Intn(4) + 2
 
 	mm := make(map[string]int, countItem)
-	//rand.Seed(time.Now().Unix()) // портит
 	length := 4
 	ranStr := make([]byte, length)
 

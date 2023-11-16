@@ -9,6 +9,7 @@ import (
 	"WB/interal/posgresql"
 	dbTask "WB/interal/task/db"
 	"WB/service"
+	"WB/service/token"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -24,7 +25,7 @@ func (h *handler) meHandle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "не найден токен авторизации", http.StatusUnauthorized)
 		return
 	}
-	isValid, _, role := interal.ValidateToken(x.(string))
+	isValid, _, role := token.ValidateToken(x.(string))
 	if !isValid {
 		http.Error(w, "не валидный токен", http.StatusUnauthorized)
 		return
@@ -38,7 +39,6 @@ func (h *handler) meHandle(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		fmt.Fprint(w, str, "\n")
-		//todo: песречитать вес грузчикам
 		fmt.Fprint(w, "id вес ЗП Пьет Устал\n")
 		for i := range allLoader {
 			fmt.Fprint(w, allLoader[i], "\n")
@@ -54,7 +54,6 @@ func (h *handler) meHandle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "не определили роль", http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
 }
 
 func (h *handler) startHandle(w http.ResponseWriter, r *http.Request) {
@@ -63,7 +62,7 @@ func (h *handler) startHandle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "не найден токен авторизации", http.StatusUnauthorized)
 		return
 	}
-	isValid, _, role := interal.ValidateToken(x.(string))
+	isValid, _, role := token.ValidateToken(x.(string))
 	if !isValid {
 		http.Error(w, "не валидный токен", http.StatusUnauthorized)
 		return
@@ -90,7 +89,6 @@ func (h *handler) startHandle(w http.ResponseWriter, r *http.Request) {
 	} else {
 		fmt.Fprint(w, "Продолжай в том же духе )")
 	}
-	w.WriteHeader(http.StatusOK)
 }
 
 func (h *handler) loginHandle(w http.ResponseWriter, r *http.Request) {
@@ -124,14 +122,13 @@ func (h *handler) loginHandle(w http.ResponseWriter, r *http.Request) {
 		h.user.Loader = user
 		w.Write([]byte("Привет, отличного тебе дня"))
 	}
-	token, err := interal.GenerateToken(h.user.Login, h.user.Role)
+	token, err := token.GenerateToken(h.user.Login, h.user.Role)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	h.ctx = context.WithValue(h.ctx, "token", token)
-	w.WriteHeader(http.StatusOK)
 }
 
 func (h *handler) registerHandle(w http.ResponseWriter, r *http.Request) {
@@ -159,14 +156,12 @@ func (h *handler) registerHandle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "достпуные роли  customer & loader", http.StatusBadRequest)
 		return
 	}
-	token, err := interal.GenerateToken(h.user.Login, h.user.Role)
+	token, err := token.GenerateToken(h.user.Login, h.user.Role)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
 	h.ctx = context.WithValue(h.ctx, "token", token)
-
-	w.WriteHeader(http.StatusCreated)
 
 }
 
@@ -177,10 +172,9 @@ func (h *handler) tasksHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(http.StatusCreated)
 		return
 	}
-	isValid, _, role := interal.ValidateToken(x.(string))
+	isValid, _, role := token.ValidateToken(x.(string))
 	if !isValid {
 		http.Error(w, "не валидный токен", http.StatusUnauthorized)
 		return
@@ -190,21 +184,19 @@ func (h *handler) tasksHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(http.StatusOK)
+
 	} else if role == "loader" {
-		fmt.Println(h.user)
-		fmt.Println(h.user.Loader)
 		task, err := dbLoader.GetTask(h.ctx, h.sql, h.user.Login)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
 		for _, t := range task {
 			fmt.Fprintln(w, t.Id, t.Name, t.Weight)
 		}
 		fmt.Fprint(w)
 	}
+
 }
 
 func (h *handler) taskPublic(w http.ResponseWriter) error {

@@ -11,9 +11,6 @@ create table customer
     money integer
 );
 
-
-insert into customer (login, password, money) values ('llc', 123, 902020);
-
 ALTER TABLE customer
     ADD CONSTRAINT customer_constraint UNIQUE (login);
 
@@ -46,5 +43,3 @@ CREATE TABLE completed_tasks (
      loader_id integer REFERENCES loader(id),
      task_id integer REFERENCES task(id)
 );
-
--- http://localhost:8080/register?login=hh&role=customer&password=123

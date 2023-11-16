@@ -6,6 +6,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
 	"net/http"
+	"time"
 )
 
 type handler struct {
@@ -24,11 +25,11 @@ func NewHandler(ctx context.Context, sql *pgxpool.Pool, user interal.Model) *han
 
 func (h *handler) Route() error {
 
-	http.HandleFunc("/login", h.loginHandle)
-	http.HandleFunc("/register", h.registerHandle)
-	http.HandleFunc("/tasks", h.tasksHandler)
-	http.HandleFunc("/me", h.meHandle)
-	http.HandleFunc("/start", h.startHandle)
+	http.HandleFunc("/login", middleware(h.loginHandle))
+	http.HandleFunc("/register", middleware(h.registerHandle))
+	http.HandleFunc("/tasks", middleware(h.tasksHandler))
+	http.HandleFunc("/me", middleware(h.meHandle))
+	http.HandleFunc("/start", middleware(h.startHandle))
 
 	log.Println("listen port: 8080")
 	err := http.ListenAndServe(":8080", nil)
@@ -36,4 +37,11 @@ func (h *handler) Route() error {
 		return err
 	}
 	return nil
+}
+
+func middleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s request: %s, %s\n", time.Now(), r.Method, r.RequestURI)
+		next.ServeHTTP(w, r)
+	}
 }

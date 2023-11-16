@@ -1,30 +1,13 @@
 package service
 
 import (
-	"WB/interal"
 	dbCustomer "WB/interal/customer/db"
 	"WB/interal/loader"
 	dbLoader "WB/interal/loader/db"
 	dbTask "WB/interal/task/db"
-	"context"
 	"fmt"
-	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
 )
-
-type gameItem struct {
-	ctx  context.Context
-	user interal.Model
-	sql  *pgxpool.Pool
-}
-
-func NewGameItem(ctx context.Context, user interal.Model, sql *pgxpool.Pool) *gameItem {
-	return &gameItem{
-		ctx:  ctx,
-		user: user,
-		sql:  sql,
-	}
-}
 
 func (g *gameItem) StartGame(taskId int, loadersId []int) (int, error) {
 	mm, err := dbLoader.GetLoaders(g.ctx, g.sql, loadersId)
