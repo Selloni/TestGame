@@ -94,7 +94,6 @@ func GetLoaders(ctx context.Context, conn *pgxpool.Pool, id []int) (map[int]load
 
 func GetTask(ctx context.Context, conn *pgxpool.Pool, login string) ([]task.Task, error) {
 	var arrTask []task.Task
-	fmt.Println("id", login)
 	var id int
 
 	q1 := `

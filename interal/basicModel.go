@@ -6,9 +6,9 @@ import (
 )
 
 type Model struct {
-	Login    string             `json:"login,omitempty"`
-	Password string             `json:"password,omitempty"`
-	Role     string             `json:"role,omitempty"`
+	Login    string             `json:"login"`
+	Password string             `json:"password"`
+	Role     string             `json:"role"`
 	Customer *customer.Customer `json:"-"`
 	Loader   *loader.Loader     `json:"-"`
 }

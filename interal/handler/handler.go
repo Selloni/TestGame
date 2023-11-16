@@ -17,7 +17,7 @@ import (
 	"net/http"
 )
 
-// todo: midlle, config
+//todo: config
 
 func (h *handler) meHandle(w http.ResponseWriter, r *http.Request) {
 	var x any = h.ctx.Value("token")
@@ -94,7 +94,7 @@ func (h *handler) startHandle(w http.ResponseWriter, r *http.Request) {
 func (h *handler) loginHandle(w http.ResponseWriter, r *http.Request) {
 	err, exists := h.existsUser(r)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	if !exists {
@@ -127,15 +127,15 @@ func (h *handler) loginHandle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	h.ctx = context.WithValue(h.ctx, "token", token)
 }
 
 func (h *handler) registerHandle(w http.ResponseWriter, r *http.Request) {
-	h.user.Login = r.FormValue("login")
-	h.user.Role = r.FormValue("role")
-	h.user.Password = r.FormValue("password")
-
+	err := json.NewDecoder(r.Body).Decode(&h.user)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 	if h.user.Role == "customer" {
 		h.user.Customer = customer.GenerateCustomer()
 		if err := dbCustomer.CreateUser(h.ctx, h.sql, h.user); err != nil {
@@ -228,11 +228,10 @@ func (h *handler) taskCustomer(w http.ResponseWriter) error {
 }
 
 func (h *handler) existsUser(r *http.Request) (error, bool) {
-	//todo: проверить на заполнение трех полей
-	h.user.Login = r.FormValue("login")
-	h.user.Role = r.FormValue("role")
-	h.user.Password = r.FormValue("password")
-
+	err := json.NewDecoder(r.Body).Decode(&h.user)
+	if err != nil {
+		return err, false
+	}
 	check, err := posgresql.Check(h.ctx, h.sql, h.user)
 
 	if err != nil {

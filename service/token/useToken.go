@@ -6,8 +6,6 @@ import (
 	"time"
 )
 
-//todo:add .evn file
-
 const swToken = "grandpat"
 
 func GenerateToken(login, role string) (string, error) {
