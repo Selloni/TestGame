@@ -24,11 +24,9 @@ func Check(ctx context.Context, conn *pgxpool.Pool, user interal.Model) (bool, e
 	return count > 0, nil
 }
 
-//todo:config
-
 func NewClient(ctx context.Context) (*pgxpool.Pool, error) {
 	conf := config.GetConfig()
-	conn, err := pgxpool.Connect(context.Background(), conf.Posqres)
+	conn, err := pgxpool.Connect(ctx, conf.Posqres)
 	if err != nil {
 		return nil, fmt.Errorf("Ошибка при подключении к базе данных:%v", err)
 	}

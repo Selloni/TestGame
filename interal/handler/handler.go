@@ -17,8 +17,6 @@ import (
 	"net/http"
 )
 
-//todo: config
-
 func (h *handler) meHandle(w http.ResponseWriter, r *http.Request) {
 	var x any = h.ctx.Value("token")
 	if x == nil {

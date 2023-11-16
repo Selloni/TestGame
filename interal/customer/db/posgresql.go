@@ -10,16 +10,6 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-// todo:type repository struct {
-//	sql *pgx.Conn
-//}
-//
-//func NewRepository(conn *pgx.Conn) *repository {
-//	return &repository{
-//		sql: conn,
-//	}
-//}
-
 func CreateUser(ctx context.Context, conn *pgxpool.Pool, user interal.Model) error {
 	q := `
 		insert into customer
