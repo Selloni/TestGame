@@ -30,7 +30,7 @@ func NewClient(ctx context.Context) (*pgxpool.Pool, error) {
 	conf := config.GetConfig()
 	conn, err := pgxpool.Connect(context.Background(), conf.Posqres)
 	if err != nil {
-		fmt.Errorf("Ошибка при подключении к базе данных:%v", err)
+		return nil, fmt.Errorf("Ошибка при подключении к базе данных:%v", err)
 	}
 	return conn, nil
 }
