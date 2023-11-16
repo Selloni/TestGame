@@ -11,6 +11,9 @@ create table customer
     money integer
 );
 
+
+insert into customer (login, password, money) values ('llc', 123, 902020);
+
 ALTER TABLE customer
     ADD CONSTRAINT customer_constraint UNIQUE (login);
 

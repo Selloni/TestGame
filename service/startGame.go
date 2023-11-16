@@ -27,7 +27,6 @@ func NewGameItem(ctx context.Context, user interal.Model, sql *pgxpool.Pool) *ga
 }
 
 func (g *gameItem) StartGame(taskId int, loadersId []int) (int, error) {
-	log.Println("Начали игру id task", taskId, loadersId)
 	mm, err := dbLoader.GetLoaders(g.ctx, g.sql, loadersId)
 	if err != nil {
 		return 2, err
@@ -38,7 +37,6 @@ func (g *gameItem) StartGame(taskId int, loadersId []int) (int, error) {
 		salarySum = salarySum + mm[lId].Salary
 		weightSum = weightSum + g.portableWeight(mm[lId])
 	}
-	log.Println(salarySum, weightSum)
 	if g.user.Customer.Money < salarySum {
 		return 1, fmt.Errorf("Недостаточно денег")
 	}
@@ -72,6 +70,5 @@ func (g *gameItem) StartGame(taskId int, loadersId []int) (int, error) {
 
 func (g *gameItem) portableWeight(ll loader.Loader) (itog int) {
 	itog = ll.Weight * (100 - ll.Tired) / 100
-	fmt.Printf("w-%d t-%d i-%d\n-----------\n", ll.Weight, ll.Tired, itog)
 	return itog
 }

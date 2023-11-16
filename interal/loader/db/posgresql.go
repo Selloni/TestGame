@@ -95,7 +95,6 @@ func GetLoaders(ctx context.Context, conn *pgxpool.Pool, id []int) (map[int]load
 	return ml, nil
 }
 
-//todo:check link
 func GetTask(ctx context.Context, conn *pgxpool.Pool, login string) ([]task.Task, error) {
 	var arrTask []task.Task
 	fmt.Println("id", login)
@@ -148,7 +147,7 @@ func UpdateLoader(ctx context.Context, conn *pgxpool.Pool, taskId int, loadersId
 	`
 	for k, v := range loadersId {
 		if v.Drunk {
-			v.Tired = +30
+			v.Tired = v.Tired + 30
 		}
 		if v.Tired > 80 {
 			_, err = conn.Exec(ctx, q1, taskId, 100, k)
