@@ -73,7 +73,7 @@ func GetLoaders(ctx context.Context, conn *pgxpool.Pool, id []int) (map[int]load
 		select id, weight, money, drunk, tired from loader
 			where id = $1
 	`
-	for i := range id {
+	for _, i := range id {
 		rows, err := conn.Query(ctx, q, i)
 		if err != nil {
 			return nil, err
@@ -90,53 +90,75 @@ func GetLoaders(ctx context.Context, conn *pgxpool.Pool, id []int) (map[int]load
 		if err = rows.Err(); err != nil {
 			return nil, err
 		}
-		return ml, nil
 	}
+	fmt.Println("map", ml)
+	return ml, nil
 }
 
 //todo:check link
-func GetTask(ctx context.Context, conn *pgxpool.Pool) ([]task.Task, error) {
-	arrTask := make([]task.Task, 0)
-	q := `
-		select name, weight from task
-			inner join loader 
-				on task.id = loader.task_id
-		`
-	rows, err := conn.Query(ctx, q)
+func GetTask(ctx context.Context, conn *pgxpool.Pool, login string) ([]task.Task, error) {
+	var arrTask []task.Task
+	fmt.Println("id", login)
+	var id int
+
+	q1 := `
+		select id from loader
+		where login = $1
+	`
+	row := conn.QueryRow(ctx, q1, login)
+	if err := row.Scan(&id); err != nil {
+		return nil, err
+	}
+
+	q2 := `
+        select task.id, task.name, task.weight
+        from completed_tasks
+        join task on completed_tasks.task_id = task.id
+        where completed_tasks.loader_id = $1
+    `
+
+	rows, err := conn.Query(ctx, q2, id)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		var t task.Task
-
-		if err := rows.Scan(&t.Id, &t.Name, &t.Weight); err != nil {
+		var data task.Task
+		if err := rows.Scan(&data.Id, &data.Name, &data.Weight); err != nil {
 			return nil, err
 		}
-		arrTask = append(arrTask, t)
+		arrTask = append(arrTask, data)
 	}
-	if err = rows.Err(); err != nil {
+	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 	return arrTask, nil
 }
 
 func UpdateLoader(ctx context.Context, conn *pgxpool.Pool, taskId int, loadersId map[int]loader.Loader) (err error) {
-	q := `
+	q1 := `
 		update loader
 			set task_id = $1, tired = $2
 			where id = $3
+	`
+	q2 := `
+		insert into completed_tasks (loader_id, task_id)
+        values ($1, $2)
 	`
 	for k, v := range loadersId {
 		if v.Drunk {
 			v.Tired = +30
 		}
 		if v.Tired > 80 {
-			_, err = conn.Exec(ctx, q, taskId, 100, k)
+			_, err = conn.Exec(ctx, q1, taskId, 100, k)
 		} else {
-			_, err = conn.Exec(ctx, q, taskId, v.Tired+20, k)
+			_, err = conn.Exec(ctx, q1, taskId, v.Tired+20, k)
 		}
+		if err != nil {
+			return err
+		}
+		_, err := conn.Exec(ctx, q2, k, taskId)
 		if err != nil {
 			return err
 		}

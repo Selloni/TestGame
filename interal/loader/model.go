@@ -19,8 +19,8 @@ func GenerateLoader() *Loader {
 		return rand.Intn(2) == 1
 	}()
 	loader := Loader{
-		Weight: rand.Intn(25) + 5,
-		Salary: rand.Intn(20000) + 10000,
+		Weight: rand.Intn(25+1) + 5,
+		Salary: rand.Intn(20000+1) + 10000,
 		Drunk:  drunk,
 		Tired:  0,
 	}

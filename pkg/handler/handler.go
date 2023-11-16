@@ -112,7 +112,7 @@ func (h *handler) loginHandle(w http.ResponseWriter, r *http.Request) {
 		}
 
 		h.user.Customer = user
-		w.Write([]byte("Привет, ты сегодня чудесно выглядишь "))
+		w.Write([]byte("Привет, ты сегодня чудесно выглядишь"))
 
 	} else if h.user.Role == "loader" {
 		user, err := dbLoader.GetInfo(h.ctx, h.sql, h.user.Login)
@@ -122,7 +122,7 @@ func (h *handler) loginHandle(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		h.user.Loader = user
-		w.Write([]byte("Привет, не переживай все будет хорошо "))
+		w.Write([]byte("Привет, отличного тебе дня"))
 	}
 	token, err := interal.GenerateToken(h.user.Login, h.user.Role)
 	if err != nil {
@@ -192,7 +192,18 @@ func (h *handler) tasksHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		w.WriteHeader(http.StatusOK)
 	} else if role == "loader" {
-		fmt.Println("logika")
+		fmt.Println(h.user)
+		fmt.Println(h.user.Loader)
+		task, err := dbLoader.GetTask(h.ctx, h.sql, h.user.Login)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		for _, t := range task {
+			fmt.Fprintln(w, t.Id, t.Name, t.Weight)
+		}
+		fmt.Fprint(w)
 	}
 }
 

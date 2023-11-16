@@ -14,7 +14,7 @@ type Customer struct {
 func GenerateCustomer() *Customer {
 	// сгенерировать рандомное число
 	customer := Customer{
-		Money:  rand.Intn(90000) + 10000,
+		Money:  rand.Intn(90000+1) + 10000,
 		Loader: nil,
 		Tasks:  nil,
 	}

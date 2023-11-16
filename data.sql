@@ -1,15 +1,14 @@
 drop table if exists customer cascade;
 drop table if exists loader cascade;
 drop table if exists task cascade;
+drop table if exists completed_tasks cascade;
 
 create table customer
 (
     id serial primary key,
     login varchar(100) not null,
     password varchar(100) not null,
-    money integer,
-    loader_id integer
---     CONSTRAINT loader_fk FOREIGN KEY (loader_id) REFERENCES loader (id)
+    money integer
 );
 
 ALTER TABLE customer
@@ -23,7 +22,6 @@ create table task
     done boolean default false
 );
 
-
 create table loader
 (
     id serial primary key,
@@ -34,11 +32,16 @@ create table loader
     drunk  boolean,
     tired integer default 0,
     task_id integer ,
-    CONSTRAINT task_fk FOREIGN KEY (task_id) REFERENCES task (id)
+    CONSTRAINT task_fk FOREIGN KEY (task_id) REFERENCES completed_tasks (id)
 );
 
 ALTER TABLE loader
     ADD CONSTRAINT loader_constraint UNIQUE (login);
 
+CREATE TABLE completed_tasks (
+     id serial PRIMARY KEY,
+     loader_id integer REFERENCES loader(id),
+     task_id integer REFERENCES task(id)
+);
 
 -- http://localhost:8080/register?login=hh&role=customer&password=123

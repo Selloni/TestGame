@@ -67,7 +67,7 @@ func generateItem() map[string]int {
 		for i := 0; i < length; i++ {
 			ranStr[i] = byte(65 + rand.Intn(25))
 		}
-		mm[string(ranStr)] = rand.Intn(70) + 10
+		mm[string(ranStr)] = rand.Intn(70+1) + 10
 	}
 	return mm
 }
